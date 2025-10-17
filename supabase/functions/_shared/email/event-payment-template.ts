@@ -19,7 +19,7 @@ export function createEventPaymentEmail(data: EventPaymentEmailData): {
 } {
   const { displayName, eventTitle, eventDateLocal, tournamentTitle, gameName } = data;
   
-  const subject = `Payment confirmation for for ${eventTitle}`;
+  const subject = `Payment confirmation for ${eventTitle}`;
   
   const tournamentLine = tournamentTitle 
     ? `${tournamentTitle}${renderOptional(gameName, " (", ")")}`
