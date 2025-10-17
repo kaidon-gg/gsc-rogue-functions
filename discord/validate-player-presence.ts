@@ -43,8 +43,7 @@ const memberHasMatchingRole = (
   return false;
 };
 
-export interface ValidatePlayerPresenceOptions {
-  target: string;
+interface BasePresenceOptions {
   token?: string;
   guildId?: string;
   roleNames?: string[];
@@ -52,7 +51,16 @@ export interface ValidatePlayerPresenceOptions {
   useId?: boolean;
 }
 
+export interface ValidatePlayerPresenceOptions extends BasePresenceOptions {
+  target: string;
+}
+
+export interface ValidatePlayersPresenceOptions extends BasePresenceOptions {
+  targets: string[];
+}
+
 export interface PlayerPresenceResult {
+  target: string;
   username: string;
   isMember: boolean;
   isRole: boolean;
@@ -70,11 +78,11 @@ const createDiscordClient = (): Client => {
   });
 };
 
-export const validatePlayerPresence = async (
-  options: ValidatePlayerPresenceOptions
-): Promise<PlayerPresenceResult> => {
+export const validatePlayersPresence = async (
+  options: ValidatePlayersPresenceOptions
+): Promise<PlayerPresenceResult[]> => {
   const {
-    target,
+    targets,
     roleNames: providedRoleNames,
     roleIds: providedRoleIds,
     useId = false
@@ -92,8 +100,8 @@ export const validatePlayerPresence = async (
     throw new Error('Missing guild ID. Provide via options.guildId or DISCORD_GUILD_ID.');
   }
 
-  if (!target) {
-    throw new Error('Missing target identifier (username or ID).');
+  if (!targets || targets.length === 0) {
+    throw new Error('Provide at least one target identifier (username or ID).');
   }
 
   const roleIds = new Set((providedRoleIds ?? []).filter(Boolean));
@@ -109,36 +117,51 @@ export const validatePlayerPresence = async (
     const guild = await client.guilds.fetch(guildId);
     const members = await guild.members.fetch();
 
-    const member = useId
-      ? members.get(target)
-      : members.find((m: GuildMember) => memberMatchesNameish(m, target));
+    return targets.map((target) => {
+      const member = useId
+        ? members.get(target)
+        : members.find((m: GuildMember) => memberMatchesNameish(m, target));
 
-    if (!member) {
+      if (!member) {
+        return {
+          target,
+          username: target,
+          isMember: false,
+          isRole: false,
+          isPresent: false
+        };
+      }
+
+      const username =
+        member.user.globalName ||
+        member.displayName ||
+        member.user.username ||
+        target;
+
+      const status = getOnlineStatus(member);
+      const isPresent = status !== 'unknown' && ONLINE_STATUSES.includes(status);
+      const isRole = memberHasMatchingRole(member, roleIds, roleNames);
+
       return {
-        username: target,
-        isMember: false,
-        isRole: false,
-        isPresent: false
+        target,
+        username,
+        isMember: true,
+        isRole,
+        isPresent
       };
-    }
-
-    const username =
-      member.user.username ||
-      member.displayName ||
-      member.user.globalName ||
-      target;
-
-    const status = getOnlineStatus(member);
-    const isPresent = status !== 'unknown' && ONLINE_STATUSES.includes(status);
-    const isRole = memberHasMatchingRole(member, roleIds, roleNames);
-
-    return {
-      username,
-      isMember: true,
-      isRole,
-      isPresent
-    };
+    });
   } finally {
     client.destroy();
   }
+};
+
+export const validatePlayerPresence = async (
+  options: ValidatePlayerPresenceOptions
+): Promise<PlayerPresenceResult> => {
+  const results = await validatePlayersPresence({
+    ...options,
+    targets: [options.target]
+  });
+
+  return results[0];
 };
