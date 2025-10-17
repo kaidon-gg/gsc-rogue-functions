@@ -19,7 +19,7 @@ export function createEventRegistrationEmail(data: EventRegistrationEmailData): 
 } {
   const { displayName, eventTitle, eventDateLocal, tournamentTitle, gameName } = data;
   
-  const subject = `You're registered for ${eventTitle}${renderOptional(gameName, " – ")}`;
+  const subject = `You're registered for ${eventTitle}`;
   
   const tournamentLine = tournamentTitle 
     ? `${tournamentTitle}${renderOptional(gameName, " (", ")")}`

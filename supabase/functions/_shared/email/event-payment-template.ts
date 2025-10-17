@@ -19,7 +19,7 @@ export function createEventPaymentEmail(data: EventPaymentEmailData): {
 } {
   const { displayName, eventTitle, eventDateLocal, tournamentTitle, gameName } = data;
   
-  const subject = `Payment confirmation for for ${eventTitle}${renderOptional(gameName, " – ")}`;
+  const subject = `Payment confirmation for for ${eventTitle}`;
   
   const tournamentLine = tournamentTitle 
     ? `${tournamentTitle}${renderOptional(gameName, " (", ")")}`
@@ -28,7 +28,7 @@ export function createEventPaymentEmail(data: EventPaymentEmailData): {
   const html = `
     <div>
       <p>Hi ${displayName},</p>
-      <p>Your payment for the <strong>${eventTitle}</strong> is now complete.</p>
+      <p>Your payment is confirmed for:</p>
       <p>
         <strong>${eventTitle}</strong><br />
         ${tournamentLine}<br />
@@ -36,7 +36,6 @@ export function createEventPaymentEmail(data: EventPaymentEmailData): {
       </p>
       <p>Make sure to be on the Discord server and have the correct role selected for the game at the event date/time.</p>
       <p>See you at the event!</p>
-
       <p>--<br />
       Rogue League Team</p>
     </div>
