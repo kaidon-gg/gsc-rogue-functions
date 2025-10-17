@@ -28,7 +28,7 @@ export function createEventPaymentEmail(data: EventPaymentEmailData): {
   const html = `
     <div>
       <p>Hi ${displayName},</p>
-      <p>Your payment is confirmed for:</p>
+      <p>Your payment is now confirmed for:</p>
       <p>
         <strong>${eventTitle}</strong><br />
         ${tournamentLine}<br />
