@@ -1,5 +1,5 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { formatDublinLocal } from "../utils.ts";
+import { formatDublinLocal } from "../utils/date.ts";
 
 export interface UserEventData {
   userEmail: string;

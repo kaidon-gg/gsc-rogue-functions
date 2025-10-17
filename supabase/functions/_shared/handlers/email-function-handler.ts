@@ -1,5 +1,5 @@
 import { sendEmail } from "../email/send-email.ts";
-import { validateWebhook, createErrorResponse, createSuccessResponse } from "../webhook.ts";
+import { validateWebhook, createErrorResponse, createSuccessResponse } from "../utils/webhook.ts";
 
 export interface EmailFunctionConfig {
   resendApiKey: string;
