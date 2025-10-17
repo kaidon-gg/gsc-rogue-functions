@@ -1,20 +1,11 @@
+import { renderOptional } from "../utils/string.ts";
+
 export interface EventRegistrationEmailData {
   displayName: string;
   eventTitle: string;
   eventDateLocal: string;
   tournamentTitle?: string;
   gameName?: string;
-}
-
-/**
- * Helper function to render optional text with prefix/suffix
- * @param value - The optional value to render
- * @param prefix - Text to add before the value (default: empty)
- * @param suffix - Text to add after the value (default: empty)
- * @returns Formatted string or empty string if value is falsy
- */
-function renderOptional(value?: string, prefix: string = "", suffix: string = ""): string {
-  return value ? `${prefix}${value}${suffix}` : "";
 }
 
 /**
@@ -39,7 +30,7 @@ export function createEventRegistrationEmail(data: EventRegistrationEmailData): 
       <p>Hi ${displayName}!</p>
       <p>Thanks for registering for:</p>
       <p>
-        ${eventTitle}<br />
+        <strong>${eventTitle}</strong><br />
         ${tournamentLine}<br />
         ${eventDateLocal} (Europe/Dublin)
       </p>
@@ -49,6 +40,7 @@ export function createEventRegistrationEmail(data: EventRegistrationEmailData): 
         - <strong>Discord:</strong> Make sure you are on the Discord server and have the correct role selected for the game<br />
         - <strong>Confirmation:</strong> Once all information is correct, you will receive an email confirming your registration
       </p>
+      <p> See you at the event </p>
       <p>--<br />
       Rogue League Team</p>
     </div>
