@@ -27,7 +27,7 @@ export function createEventRegistrationEmail(data: EventRegistrationEmailData): 
   
   const html = `
     <div>
-      <p>Hi ${displayName}!</p>
+      <p>Hi ${displayName},</p>
       <p>Thanks for registering for:</p>
       <p>
         <strong>${eventTitle}</strong><br />
