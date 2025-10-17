@@ -3,7 +3,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { handleEmailFunction } from "../_shared/handlers/email-function-handler.ts";
 import { fetchUserEventData, UserEventData } from "../_shared/database/user-event-data.ts";
 import { createEventPaymentEmail } from "../_shared/email/event-payment-template.ts";
-import { validateWebhook } from "../_shared/utils/webhook.ts";
+import { createSuccessResponse, validateWebhook } from "../_shared/utils/webhook.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const FROM_EMAIL = Deno.env.get("FROM_EMAIL")!; // e.g. "Rogue League <hello@your-domain>"
@@ -15,7 +15,7 @@ Deno.serve(async (req: Request) => {
   const validation = await validateWebhook(
     req,
     EDGE_WEBHOOK_SECRET,
-    "INSERT",
+    "UPDATE",
     "league_event_players"
   );
 
@@ -23,8 +23,19 @@ Deno.serve(async (req: Request) => {
     return validation.response!;
   }
 
+  const payload = validation.payload!;
+  const paymentStatus = payload.record?.payment_status;
+  const previousStatus = payload.old_record?.payment_status;
+
+  if (paymentStatus !== "PAID" || previousStatus === "PAID") {
+    return createSuccessResponse({
+      skipped: true,
+      reason: "Payment status did not transition to PAID"
+    });
+  }
+
   return handleEmailFunction<UserEventData>(
-    validation.payload!.record,
+    payload.record,
     {
       resendApiKey: RESEND_API_KEY,
       fromEmail: FROM_EMAIL,

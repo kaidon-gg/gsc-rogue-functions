@@ -2,6 +2,7 @@ export interface WebhookPayload {
   type: string;
   table: string;
   record: Record<string, any>;
+  old_record?: Record<string, any> | null;
 }
 
 export interface WebhookValidationResult {
