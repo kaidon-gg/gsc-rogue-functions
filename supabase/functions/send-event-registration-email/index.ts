@@ -1,6 +1,7 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { handleEmailFunction } from "../_shared/handlers/email-function-handler.ts";
+import { validateWebhook } from "../_shared/utils/webhook.ts";
 import { createEventRegistrationEmail } from "../_shared/email/event-registration-template.ts";
 import { fetchUserEventData, UserEventData } from "../_shared/database/user-event-data.ts";
 
@@ -11,14 +12,24 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const EDGE_WEBHOOK_SECRET = Deno.env.get("EDGE_WEBHOOK_SECRET")!;
 
 Deno.serve(async (req: Request) => {
-  return handleEmailFunction<UserEventData>(
+  const validation = await validateWebhook(
     req,
+    EDGE_WEBHOOK_SECRET,
+    "INSERT",
+    "league_event_players"
+  );
+
+  if (!validation.success) {
+    return validation.response!;
+  }
+
+  return handleEmailFunction<UserEventData>(
+    validation.payload!.record,
     {
       resendApiKey: RESEND_API_KEY,
       fromEmail: FROM_EMAIL,
       supabaseUrl: SUPABASE_URL,
-      supabaseServiceKey: SUPABASE_SERVICE_ROLE_KEY,
-      webhookSecret: EDGE_WEBHOOK_SECRET
+      supabaseServiceKey: SUPABASE_SERVICE_ROLE_KEY
     },
     {
       expectedTable: "league_event_players",
@@ -34,7 +45,7 @@ Deno.serve(async (req: Request) => {
           tournamentTitle: data.tournamentTitle,
           gameName: data.gameName
         });
-        
+
         return {
           to: [data.userEmail],
           subject,

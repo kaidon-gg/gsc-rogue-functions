@@ -1,12 +1,11 @@
 import { sendEmail } from "../email/send-email.ts";
-import { validateWebhook, createErrorResponse, createSuccessResponse } from "../utils/webhook.ts";
+import { createErrorResponse, createSuccessResponse } from "../utils/webhook.ts";
 
 export interface EmailFunctionConfig {
   resendApiKey: string;
   fromEmail: string;
   supabaseUrl: string;
   supabaseServiceKey: string;
-  webhookSecret: string;
 }
 
 export interface EmailFunctionHandler<T> {
@@ -16,6 +15,7 @@ export interface EmailFunctionHandler<T> {
     data?: T;
     error?: string;
   }>;
+  shouldSend?: (data: T) => boolean | Promise<boolean>;
   createEmail: (data: T) => {
     to: string[];
     subject: string;
@@ -25,34 +25,22 @@ export interface EmailFunctionHandler<T> {
 
 /**
  * Generic email function handler that processes webhooks and sends emails
- * @param req - Request object
+ * @param record - Database record from the webhook payload
  * @param config - Email function configuration
  * @param handler - Handler with data fetching and email creation logic
  * @returns Response
  */
 export async function handleEmailFunction<T>(
-  req: Request,
+  record: Record<string, any>,
   config: EmailFunctionConfig,
   handler: EmailFunctionHandler<T>
 ): Promise<Response> {
   try {
-    // 1) Validate webhook
-    const validation = await validateWebhook(
-      req,
-      config.webhookSecret,
-      "INSERT",
-      handler.expectedTable
-    );
-
-    if (!validation.success) {
-      return validation.response!;
-    }
-
-    // 2) Fetch data using handler
+    // 1) Fetch data using handler
     const fetchResult = await handler.fetchData(
       config.supabaseUrl,
       config.supabaseServiceKey,
-      validation.payload!.record
+      record
     );
 
     if (!fetchResult.success || !fetchResult.data) {
@@ -63,8 +51,22 @@ export async function handleEmailFunction<T>(
       );
     }
 
+    const data = fetchResult.data;
+    const shouldSend = handler.shouldSend ? await handler.shouldSend(data) : true;
+    if (!shouldSend) {
+      // 2) Skip send when handler vetoes delivery
+      console.info("Email send skipped by handler condition", {
+        table: handler.expectedTable,
+        record
+      });
+      return createSuccessResponse({
+        skipped: true,
+        reason: "Email send skipped by handler"
+      });
+    }
+
     // 3) Create email content using handler
-    const emailContent = handler.createEmail(fetchResult.data);
+    const emailContent = handler.createEmail(data);
 
     // 4) Send email
     const emailResult = await sendEmail(
