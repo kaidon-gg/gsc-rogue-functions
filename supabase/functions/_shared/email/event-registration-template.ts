@@ -7,6 +7,17 @@ export interface EventRegistrationEmailData {
 }
 
 /**
+ * Helper function to render optional text with prefix/suffix
+ * @param value - The optional value to render
+ * @param prefix - Text to add before the value (default: empty)
+ * @param suffix - Text to add after the value (default: empty)
+ * @returns Formatted string or empty string if value is falsy
+ */
+function renderOptional(value?: string, prefix: string = "", suffix: string = ""): string {
+  return value ? `${prefix}${value}${suffix}` : "";
+}
+
+/**
  * Generate event registration confirmation email content
  * @param data - Event registration data
  * @returns Object with subject and html content
@@ -17,15 +28,29 @@ export function createEventRegistrationEmail(data: EventRegistrationEmailData): 
 } {
   const { displayName, eventTitle, eventDateLocal, tournamentTitle, gameName } = data;
   
-  const subject = `You're registered for ${eventTitle}` + (gameName ? ` – ${gameName}` : "");
+  const subject = `You're registered for ${eventTitle}${renderOptional(gameName, " – ")}`;
+  
+  const tournamentLine = tournamentTitle 
+    ? `${tournamentTitle}${renderOptional(gameName, " (", ")")}`
+    : renderOptional(gameName);
   
   const html = `
-    <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; line-height:1.5;">
-      <h2>You're in, ${displayName}! ✅</h2>
-      <p>Thanks for registering for <strong>${eventTitle}</strong>${tournamentTitle ? ` (tournament: <strong>${tournamentTitle}</strong>)` : ""}${gameName ? ` – <strong>${gameName}</strong>` : ""}.</p>
-      <p><strong>Event date:</strong> ${eventDateLocal} (Europe/Dublin)</p>
-      <hr />
-      <p style="font-size:12px;color:#666">Rogue League • See you soon!</p>
+    <div>
+      <p>Hi ${displayName}!</p>
+      <p>Thanks for registering for:</p>
+      <p>
+        ${eventTitle}<br />
+        ${tournamentLine}<br />
+        ${eventDateLocal} (Europe/Dublin)
+      </p>
+      <p><strong>Your registration is not yet complete.</strong> Please ensure you complete the following steps:</p>
+      <p>
+        - <strong>Payment:</strong> Complete the payment with the Tournament Organizers using your selected payment method<br />
+        - <strong>Discord:</strong> Make sure you are on the Discord server and have the correct role selected for the game<br />
+        - <strong>Confirmation:</strong> Once all information is correct, you will receive an email confirming your registration
+      </p>
+      <p>--<br />
+      Rogue League Team</p>
     </div>
   `;
   

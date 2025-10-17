@@ -18,6 +18,7 @@ Triggered when a user registers for a league event. Automatically sends a person
 **Trigger**: Database webhook on `league_event_players` table  
 **Dependencies**: Resend API for email delivery
 
+
 ## Environment Variables
 
 The following environment variables need to be configured in your Supabase project:
