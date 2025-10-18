@@ -119,6 +119,8 @@ export async function performCheckin(
           roleNames: discordRoleName ? [discordRoleName] : undefined
         });
 
+        console.log(`Discord presence result for ${discordHandle}:`, presenceResult);
+
         discordPresence = {
           isMember: presenceResult.isMember,
           isRole: presenceResult.isRole,
