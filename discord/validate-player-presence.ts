@@ -139,6 +139,7 @@ export const validatePlayersPresence = async (
         target;
 
       const status = getOnlineStatus(member);
+      console.log(`Member ${username} status: ${status}`);
       const isPresent = status !== 'unknown' && ONLINE_STATUSES.includes(status);
       const isRole = memberHasMatchingRole(member, roleIds, roleNames);
 
