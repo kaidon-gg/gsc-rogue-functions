@@ -108,6 +108,8 @@ export async function performCheckin(
       username?: string;
     };
 
+    console.log(`Validating Discord presence for handle: ${discordHandle}`);
+
     if (discordHandle) {
       try {
         const presenceResult = await validatePlayerPresence({
