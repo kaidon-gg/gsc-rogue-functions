@@ -253,7 +253,7 @@ export async function validatePlayersPresence(
           // Fetch presence data
           const presence = await fetchMemberPresence(guildId, member.user.id, token);
           const status = presence?.status ?? 'unknown';
-          const isPresent = status !== 'unknown' && ONLINE_STATUSES.includes(status);
+          const isPresent = status !== 'unknown' && ONLINE_STATUSES.includes(status.toLowerCase() as PresenceStatus);
           const isRole = memberHasMatchingRole(member, roleIds, roleNames, guildRoles);
 
           return {

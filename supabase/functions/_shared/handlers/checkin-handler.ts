@@ -100,6 +100,7 @@ export async function performCheckin(
     
     // Step 3: Get Discord handle and validate presence
     const discordHandle = providedDiscordHandle || await getDiscordHandle(supabase, userId);
+    
     let discordPresence: {
       isMember: boolean;
       isRole: boolean;
