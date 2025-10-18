@@ -19,7 +19,7 @@ export async function checkPaymentStatus(
     .select("payment_status, league_payment_id")
     .eq("user_id", userId)
     .eq("event_id", eventId)
-    .single();
+    .maybeSingle();
 
   if (error || !player) {
     console.log(`Player not found: ${error?.message}`);
@@ -38,7 +38,7 @@ export async function checkPaymentStatus(
       .from("league_payments")
       .select("status")
       .eq("id", player.league_payment_id)
-      .single();
+      .maybeSingle();
 
     if (payment?.status === 'COMPLETE') {
       console.log("Payment found and complete");

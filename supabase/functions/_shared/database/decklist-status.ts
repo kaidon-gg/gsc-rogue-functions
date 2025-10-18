@@ -17,7 +17,7 @@ export async function checkDecklistStatus(
     .select("decklist")
     .eq("user_id", userId)
     .eq("event_id", eventId)
-    .single();
+    .maybeSingle();
 
   if (error || !player) {
     console.log(`Player not found: ${error?.message}`);

@@ -15,7 +15,7 @@ export async function getDiscordHandle(
     .from("league_players")
     .select("discord_handle")
     .eq("user_id", userId)
-    .single();
+    .maybeSingle();
 
   if (leaguePlayer?.discord_handle) {
     console.log(`Discord handle from league_players: ${leaguePlayer.discord_handle}`);
@@ -27,7 +27,7 @@ export async function getDiscordHandle(
     .from("app_users")
     .select("discord_handle")
     .eq("user_id", userId)
-    .single();
+    .maybeSingle();
 
   if (appUser?.discord_handle) {
     console.log(`Discord handle from app_users: ${appUser.discord_handle}`);

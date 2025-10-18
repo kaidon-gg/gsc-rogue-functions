@@ -62,16 +62,16 @@ export async function fetchUserEventData(
         id,
         event_title,
         event_date,
-        league_tournaments!inner (
+        league_tournaments (
           title,
-          ref_games!inner (
+          ref_games (
             name
           )
         )
       `)
       .eq("id", eventId)
-      .single();
-    
+      .maybeSingle();
+
     if (eventErr || !eventRow) {
       return {
         success: false,
@@ -81,10 +81,17 @@ export async function fetchUserEventData(
     
     const eventTitle = eventRow.event_title ?? "League Event";
     const eventDateLocal = formatDublinLocal(eventRow.event_date);
-    const tournamentTitle = eventRow.league_tournaments?.title ?? undefined;
-    const gameName = eventRow.league_tournaments?.ref_games?.name ?? undefined;
     
-    return {
+    // Handle tournament data - it might be an array or object
+    const tournament = Array.isArray(eventRow.league_tournaments) 
+      ? eventRow.league_tournaments[0] 
+      : eventRow.league_tournaments;
+    
+    const tournamentTitle = tournament?.title ?? undefined;
+    const game = Array.isArray(tournament?.ref_games) 
+      ? tournament.ref_games[0] 
+      : tournament?.ref_games;
+    const gameName = game?.name ?? undefined;    return {
       success: true,
       data: {
         userEmail,
