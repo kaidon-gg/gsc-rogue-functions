@@ -144,11 +144,11 @@ export async function performCheckin(
     }
 
     // Step 4: Determine if checkin is successful
-    const allConditionsMet = hasPaid && 
-                            hasDecklist && 
-                            discordPresence.isMember && 
-                            discordPresence.isRole && 
-                            discordPresence.isPresent;
+    const allConditionsMet =
+      hasPaid &&
+      hasDecklist &&
+      discordPresence.isMember &&
+      discordPresence.isRole;
 
     let statusUpdated = false;
     let message = "";
@@ -164,8 +164,7 @@ export async function performCheckin(
       if (!hasDecklist) missingConditions.push("decklist");
       if (!discordPresence.isMember) missingConditions.push("Discord membership");
       if (!discordPresence.isRole) missingConditions.push("Discord role");
-      if (!discordPresence.isPresent) missingConditions.push("Discord presence");
-      
+
       message = `Checkin failed. Missing: ${missingConditions.join(", ")}`;
     }
 

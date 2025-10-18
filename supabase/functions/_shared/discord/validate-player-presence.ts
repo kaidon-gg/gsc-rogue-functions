@@ -43,8 +43,26 @@ const normalize = (value: unknown): string =>
   (value ?? '').toString().trim().toLowerCase();
 
 const getOnlineStatus = (member: DiscordGuildMember | null): PresenceStatus => {
-  if (!member?.presence) return 'unknown';
-  return member.presence.status;
+  if (!member) {
+    console.log('No member provided');
+    return 'unknown';
+  }
+  
+  if (!member.presence) {
+    console.log('No presence data for member:', member.user?.username || 'unknown user');
+    return 'unknown';
+  }
+  
+  const status = member.presence.status;
+  console.log('Presence data found for', member.user?.username || 'unknown user', ':', member.presence);
+  
+  // Ensure status is valid
+  if (!status || typeof status !== 'string') {
+    console.log('Invalid status type:', typeof status, status);
+    return 'unknown';
+  }
+  
+  return status as PresenceStatus;
 };
 
 const memberMatchesNameish = (member: DiscordGuildMember, target: string): boolean => {
@@ -131,16 +149,71 @@ async function fetchGuildMembers(
   token: string, 
   limit: number = 1000
 ): Promise<DiscordGuildMember[]> {
-  const response = await discordApiRequest(
-    `/guilds/${guildId}/members?limit=${limit}`, 
+  // Try to fetch with presence information first
+  let response = await discordApiRequest(
+    `/guilds/${guildId}/members?limit=${limit}&with_presences=true`, 
     token
   );
+  
+  if (!response.ok) {
+    // If that fails, try without presence information
+    console.log('Failed to fetch with presences, trying without...');
+    response = await discordApiRequest(
+      `/guilds/${guildId}/members?limit=${limit}`, 
+      token
+    );
+  }
   
   if (!response.ok) {
     throw new Error(`Failed to fetch guild members: ${response.status} ${response.statusText}`);
   }
   
-  return await response.json();
+  const members = await response.json();
+  console.log(`Fetched ${members.length} members. Sample member structure:`, JSON.stringify(members[0], null, 2));
+  return members;
+}
+
+/**
+ * Fetch individual member presence from Discord API as fallback
+ */
+async function fetchMemberPresence(
+  guildId: string, 
+  memberId: string, 
+  token: string
+): Promise<DiscordPresence | null> {
+  try {
+    // Try the guild member endpoint first
+    const response = await discordApiRequest(
+      `/guilds/${guildId}/members/${memberId}`, 
+      token
+    );
+    
+    if (response.ok) {
+      const memberData = await response.json();
+      if (memberData.presence) {
+        return memberData.presence;
+      }
+    }
+    
+    // If no presence in member data, try the user endpoint
+    const userResponse = await discordApiRequest(
+      `/users/${memberId}`, 
+      token
+    );
+    
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      if (userData.presence) {
+        return userData.presence;
+      }
+    }
+    
+    console.log(`No presence data available for member ${memberId}`);
+    return null;
+  } catch (error) {
+    console.error(`Error fetching presence for member ${memberId}:`, error);
+    return null;
+  }
 }
 
 /**
@@ -160,30 +233,7 @@ async function fetchGuildRoles(
   return new Map(roles.map(role => [role.id, role]));
 }
 
-/**
- * Fetch member presence from Discord API
- */
-async function fetchMemberPresence(
-  guildId: string, 
-  memberId: string, 
-  token: string
-): Promise<DiscordPresence | null> {
-  try {
-    const response = await discordApiRequest(
-      `/guilds/${guildId}/members/${memberId}`, 
-      token
-    );
-    
-    if (!response.ok) {
-      return null;
-    }
-    
-    const memberData = await response.json();
-    return memberData.presence || null;
-  } catch {
-    return null;
-  }
-}
+
 
 /**
  * Validate multiple players' presence in Discord
@@ -250,9 +300,17 @@ export async function validatePlayersPresence(
             member.user.username ||
             target;
 
-          // Fetch presence data
-          const presence = await fetchMemberPresence(guildId, member.user.id, token);
-          const status = presence?.status ?? 'unknown';
+          // Try to get presence data from member object first
+          let status = getOnlineStatus(member);
+          
+          // If no presence data in member object, try fetching it separately
+          if (status === 'unknown') {
+            console.log(`No presence in member object for ${username}, trying fallback API call...`);
+            const presence = await fetchMemberPresence(guildId, member.user.id, token);
+            status = presence?.status || 'unknown';
+          }
+          
+          console.log(`Discord presence for ${username}:`, member.presence, status);
           const isPresent = status !== 'unknown' && ONLINE_STATUSES.includes(status.toLowerCase() as PresenceStatus);
           const isRole = memberHasMatchingRole(member, roleIds, roleNames, guildRoles);
 
