@@ -36,11 +36,11 @@ export function createEventRegistrationEmail(data: EventRegistrationEmailData): 
       </p>
       <p><strong>Your registration is not yet complete.</strong> Please ensure you complete the following steps:</p>
       <p>
-        - <strong>Payment:</strong> Complete the payment with the Tournament Organizers using your selected payment method<br />
-        - <strong>Discord:</strong> Make sure you are on the Discord server and have the correct role selected for the game<br />
-        - <strong>Confirmation:</strong> Once all information is correct, you will receive an email confirming your registration
+        - <strong>Payment:</strong> Complete payment with Tournament Organizers<br />
+        - <strong>Discord:</strong> Join the server and select the correct game role<br />
       </p>
-      <p> See you at the event </p>
+      <p>Make sure you're on Discord with the correct role at event time.</p>
+      <p>See you at the event!</p>
       <p>--<br />
       Rogue League Team</p>
     </div>
